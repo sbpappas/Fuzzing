@@ -1,6 +1,6 @@
 import random
 import sys 
-
+import time
 import os
 
 def create_seed_file(): # usually just done the first time you run the fuzzer, creates a seed file 
@@ -39,4 +39,5 @@ if __name__ == "__main__": # make sure we got the args
         sys.exit(1)
 
     fuzz_this_thing(prng_seed, iterations)
+
 
