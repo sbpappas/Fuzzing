@@ -41,8 +41,12 @@ object Fuzzer {
                      byteArray(i) = random.nextInt(256).toByte
                 }
             }
+            if ((iterations + 1) % 500 == 0) { // Extend the buffer every 500 iterations
+                byteArray ++= Array.fill(10)(random.nextInt(256).toByte)
+            }
         }
-
+        // Write the fuzzed data to standard output
+        System.out.write(byteArray.toArray)
 
 
     }
