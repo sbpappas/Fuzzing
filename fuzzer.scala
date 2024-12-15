@@ -51,10 +51,33 @@ object Fuzzer {
 
     }
 
-    def testMethod(): Unit = {
-        println("hey")
-    }
+ 
     def main(args: Array[String]) = {
         println("Hello, world")
+        println("Received arguments: " + args.mkString(", "))
+        if (args.length != 2) {
+            System.err.println("Two arguments required")
+            System.exit(1)    
+        }
+        val prngSeed = try {
+            args(0).toInt
+        } catch {
+            case _: NumberFormatException =>
+                System.err.println("<prng_seed> must be an integer.")
+                System.exit(1)
+                0 // Unreachable
+        }
+
+        val iterations = try {
+            args(1).toInt
+        } catch {
+            case _: NumberFormatException =>
+                System.err.println("<iterations> must be an integer.")
+                System.exit(1)
+                0 // Unreachable
+        }
+
+        // Call the fuzzing function
+        fuzzThisThing(prngSeed, iterations)
     }
 }
