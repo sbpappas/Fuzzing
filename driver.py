@@ -1,7 +1,7 @@
 import time
 import subprocess
 
-def run_script(script, args):
+def run_python_fuzzer(script, args):
     """
     Run a Python script with arguments and time its execution.
 
@@ -33,22 +33,69 @@ def run_script(script, args):
         print(f"Error while running script {script}: {e}")
         return None, None, None, None
 
+def run_c_fuzzer(c_file, output_binary, prng_seed, iterations):
+    # Step 1: Compile the C file
+    try:
+        print(f"Compiling {c_file}...")
+        compile_process = subprocess.run(
+            ["gcc", "-o", output_binary, c_file],
+            capture_output=True,
+            text=True
+        )
+        if compile_process.returncode != 0:
+            print("Compilation failed:")
+            print(compile_process.stderr)
+            return
+        print("Compilation successful.")
+    except Exception as e:
+        print(f"Error during compilation: {e}")
+        return
+
+    # Step 2: Run the compiled binary
+    try:
+        print(f"Running {output_binary} with arguments: {prng_seed} {iterations}...")
+        start_time = time.perf_counter()
+        run_process = subprocess.run(
+            [f"./{output_binary}", str(prng_seed), str(iterations)],
+            capture_output=True,
+            text=False  # Output might not be UTF-8 encoded
+        )
+        end_time = time.perf_counter()
+        
+        if run_process.returncode != 0:
+            print("Execution failed:")
+            print(run_process.stderr.decode('utf-8', errors='replace'))
+        else:
+            print("Execution successful. Output:")
+            print(run_process.stdout.decode('utf-8', errors='replace'))
+
+        print(f"Execution time: {end_time - start_time:.6f} seconds")
+    except Exception as e:
+        print(f"Error during execution: {e}")
+
 if __name__ == "__main__":
     # Define the script to run and its arguments
     script = "fuzzer.py"
-    prng_seed = "1234"
-    iterations = "1000"
+    prng_seed = "12345"
+    iterations = "100005"
     args = [prng_seed, iterations]
 
     print(f"Running script: {script} with arguments: {args}")
 
     # Run the script and time it
-    execution_time, stdout, stderr, return_code = run_script(script, args)
+    execution_time, stdout, stderr, return_code = run_python_fuzzer(script, args)
 
     if execution_time is not None:
         print(f"\nExecution Time: {execution_time:.6f} seconds")
-        print("\nScript Output (decoded):")
-        print(stdout)  # Decoded output from the script
+        #print("\nScript Output (decoded):")
+        #print(stdout)  # Decoded output from the script
         print("\nScript Errors (if any):")
         print(stderr)  # Decoded errors from the script
-        print(f"\nReturn Code: {return_code}")
+        #print(f"\nReturn Code: {return_code}") 
+
+    c_fuzzer_file = "fuzzer.c"
+    output_binary = "fuzzer"
+    prng_seed = int(prng_seed)
+    iterations = 1000
+
+    run_c_fuzzer(c_fuzzer_file, output_binary, prng_seed, iterations)
