@@ -77,17 +77,48 @@ def run_c_fuzzer(c_file, output_binary, prng_seed, iterations):
     except Exception as e:
         print(f"Error during execution: {e}")
 
+def run_scala_script(scala_file, *args):
+    try:
+        # Construct the command to run scala-cli with arguments
+        command = ["scala-cli", "run", scala_file, "--"] + list(args)
+        print(f"Running command: {' '.join(command)}")
+        
+        # Measure execution time
+        start_time = time.time()
+        
+        # Execute the command
+        result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        end_time = time.time()
+        
+        # Decode output using 'replace' to handle encoding errors gracefully
+        stdout = result.stdout.decode(errors="replace")
+        stderr = result.stderr.decode(errors="replace")
+        
+        print("=== Output ===")
+        print(stdout)
+        print("=== Errors ===")
+        print(stderr)
+        
+        # Check for errors
+        if result.returncode != 0:
+            print(f"Scala script failed with exit code {result.returncode}")
+        else:
+            print(f"Scala script ran successfully in {end_time - start_time:.6f} seconds!")
+    except Exception as e:
+        print(f"An error occurred while running the Scala script: {e}")
+
+
 if __name__ == "__main__":
     # define the script to run and its arguments
-    script = "fuzzer.py"
+    python_script = "fuzzer.py"
     prng_seed = "12345"
-    iterations = "100005"
+    iterations = "30005"
     args = [prng_seed, iterations]
 
-    print(f"Running script: {script} with arguments: {args}")
+    print(f"Running script: {python_script} with arguments: {args}")
 
     # run the script and time it
-    execution_time, stdout, stderr, return_code = run_python_fuzzer(script, args)
+    execution_time, stdout, stderr, return_code = run_python_fuzzer(python_script, args)
 
     if execution_time is not None:
         print(f"\nExecution Time: {execution_time:.6f} seconds")
@@ -103,3 +134,8 @@ if __name__ == "__main__":
     #iterations = iterations
 
     run_c_fuzzer(c_fuzzer_file, output_binary, prng_seed, iterations)
+
+    scala_fuzzer_file = "fuzzer.scala"
+    run_scala_script(scala_fuzzer_file, prng_seed, iterations)
+
+
