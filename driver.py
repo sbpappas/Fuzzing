@@ -112,7 +112,8 @@ if __name__ == "__main__":
     # define the script to run and its arguments
     python_script = "fuzzer.py"
     prng_seed = "12345"
-    iterations = "30005"
+    iterations = int(input("enter the amount of iterations: "))
+    #iterations = "300005"
     args = [prng_seed, iterations]
 
     print(f"Running script: {python_script} with arguments: {args}")

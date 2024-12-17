@@ -38,6 +38,6 @@ if __name__ == "__main__": # make sure we got the args
         print("The input: <prng_seed> and <iterations> must be integers, try again.", file=sys.stderr)
         sys.exit(1)
 
-    fuzz_this_thing(prng_seed, iterations)
+    fuzz_this_thing(prng_seed, iterations) 
 
 
