@@ -32,7 +32,7 @@ def run_python_fuzzer(script, args):
         return execution_time, stdout, stderr, result.returncode
 
     except Exception as e:
-        print(f"Error while running script {script}: {e}")
+        print(f"Error while running python script {script}: {e}")
         return None, None, None, None
 
 def run_c_fuzzer(c_file, output_binary, prng_seed, iterations):
@@ -56,7 +56,7 @@ def run_c_fuzzer(c_file, output_binary, prng_seed, iterations):
 
     # run the compiled binary
     try:
-        print(f"Running {output_binary} with arguments: {prng_seed} {iterations}...")
+        print(f"Running C {output_binary} with arguments: {prng_seed} {iterations}...")
         start_time = time.perf_counter()
         run_process = subprocess.run(
             [f"./{output_binary}", str(prng_seed), str(iterations)],
@@ -75,7 +75,7 @@ def run_c_fuzzer(c_file, output_binary, prng_seed, iterations):
             #print(run_process.stdout.decode('utf-8', errors='replace'))
 
         print(f"C Run time: {end_time - start_time:.6f} seconds")
-        print(f"C Compile + run time: {all_end_time - all_start_time:.6f} seconds")
+        print(f"\nC Compile + run time: {all_end_time - all_start_time:.6f} seconds\n")
     except Exception as e:
         print(f"Error during execution: {e}")
 
@@ -96,20 +96,20 @@ def run_scala_script(scala_file, *args):
         stdout = result.stdout.decode(errors="replace")
         stderr = result.stderr.decode(errors="replace")
         
-        print("=== Output ===")
-        print(stdout)
-        print("=== Errors ===")
-        print(stderr)
+        #print("=== Output ===")
+        #print(stdout)
+        #print("=== Errors ===")
+        if stderr: print(stderr)
         
         # Check for errors
         if result.returncode != 0:
             print(f"Scala script failed with exit code {result.returncode}")
         else:
-            print(f"Scala script ran successfully in {end_time - start_time:.6f} seconds!")
+            print(f"\nScala execution time: {end_time - start_time:.6f} seconds\n")
     except Exception as e:
         print(f"An error occurred while running the Scala script: {e}")
 
-def run_julia_script():
+def run_julia_script(julia_file):
     try:
         command = ["julia", julia_file] + list(args)
         print(f"Running command: {' '.join(command)}")
@@ -142,7 +142,7 @@ import time
 
 def run_script(script_name, args, interpreter):
     """
-    Function to run a script with a given interpreter, measure its runtime, and capture output/errors.
+    Abstract unction to run a script from any language with a specified interpreter
     
     :param script_name: Name of the script to run.
     :param args: List of arguments to pass to the script.
@@ -166,13 +166,38 @@ def run_script(script_name, args, interpreter):
         
         # Print output and timing information
         print(f"\n {interpreter} Execution Time: {end_time - start_time:.6f} seconds\n")
-        print(f"Script Output:\n{result.stdout}")
-        print(f"Script Errors (if any):\n{result.stderr}")
+        #print(f"Script Output:\n{result.stdout}")
+        #print(f"Script Errors (if any):\n{result.stderr}")
     except subprocess.CalledProcessError as e:
         end_time = time.time()  # End timing in case of errors
         print(f"\nAn error occurred while running the script: {e}\n")
         print(f"Execution Time: {end_time - start_time:.6f} seconds")
         print(f"Script Errors:\n{e.stderr}")
+
+def run_java_file(java_file, class_name, args):
+    start_time = time.time()
+    try:
+        subprocess.run(["javac", java_file], check=True)
+        print(f"Successfully compiled {java_file}")
+    except subprocess.CalledProcessError as e:
+        print(f"Error during compilation: {e}")
+        exit(1)
+    try:
+        result = subprocess.run(
+            ["java", class_name] + args,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            #text=True,
+            check=True
+        )
+        end_time = time.time()
+        print(f"Successfully executed {class_name}")
+        print(f"\nExecution Time: {end_time - start_time:.6f} seconds\n")
+        #print(f"Program Output:\n{result.stdout}")
+        #print(f"Program Errors (if any):\n{result.stderr}")
+    except subprocess.CalledProcessError as e:
+        print(f"Error while running Java program: {e}")
+        print(f"Error Output:\n{e.stderr}")
 
 
 if __name__ == "__main__":
@@ -189,10 +214,10 @@ if __name__ == "__main__":
     execution_time, stdout, stderr, return_code = run_python_fuzzer(python_script, args)
 
     if execution_time is not None:
-        print(f"\nExecution Time: {execution_time:.6f} seconds")
+        print(f"\n Python Execution Time: {execution_time:.6f} seconds")
         #print("\nScript Output (decoded):")
         #print(stdout)  # Decoded output from the script
-        print("\nScript Errors (if any):")
+        #print("\nScript Errors (if any):")
         print(stderr)  # Decoded errors from the script
         #print(f"\nReturn Code: {return_code}") 
 
@@ -208,10 +233,10 @@ if __name__ == "__main__":
     run_scala_script(scala_fuzzer_file, prng_seed, iterations)
     #julia_fuzzer_file = "fuzzer.jl"
     #run_julia_script(julia_fuzzer_file, prng_seed, iterations)
-    script_name = "fuzzer.jl"  # Name of your Julia script
-    interpreter = "julia"  # Interpreter for Julia
-    prng_seed = "1234"  # Example PRNG seed
-    iterations = "1000"  # Example iterations
-    
-    run_script(script_name, [prng_seed, iterations], interpreter)
+
+    run_script("fuzzer.jl", [prng_seed, iterations], "julia") #julia script
+
+    run_java_file("Fuzzer.java", "Fuzzer", [prng_seed, iterations])
+
+
 

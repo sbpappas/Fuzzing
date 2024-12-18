@@ -4,25 +4,21 @@ import java.util.*;
 
 public class Fuzzer {
 
-    // Method to create a seed file with default data if it doesn't exist
-    public static void createSeedFile(String seedFile) throws IOException {
+    public static void create_seed_file(String seedFile) throws IOException {
         String defaultSeed = "Initial Seed Data";
-        Files.write(Paths.get(seedFile), defaultSeed.getBytes());
+        Files.write(Paths.get(seedFile), defaultSeed.getBytes()); //make file with binary contents of string
         System.out.println("Created a default seed file with content: " + defaultSeed);
     }
 
-    // Method to fuzz the data in the seed file
     public static void fuzzThisThing(int prngSeed, int iterations, String seedFile) throws IOException {
         // Check if the seed file exists, create it if not
         if (!Files.exists(Paths.get(seedFile))) {
-            createSeedFile(seedFile);
+            create_seed_file(seedFile);
         }
 
-        // Read the seed file into a byte array
-        byte[] data = Files.readAllBytes(Paths.get(seedFile));
+        byte[] data = Files.readAllBytes(Paths.get(seedFile));// Read the seed file into a byte array
         Random rng = new Random(prngSeed);
 
-        // Fuzz the data
         for (int i = 0; i < iterations; i++) {
             for (int j = 0; j < data.length; j++) {
                 if (rng.nextDouble() < 0.13) { // 13% chance to mutate a byte
@@ -43,7 +39,6 @@ public class Fuzzer {
         System.out.write(data);
     }
 
-    // Main method to parse arguments and run the fuzzer
     public static void main(String[] args) {
         if (args.length != 2) {
             System.err.println("Usage: java Fuzzer <prng_seed> <iterations>");
