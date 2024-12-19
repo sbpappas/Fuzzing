@@ -35,17 +35,18 @@ object Fuzzer {
         val random = new Random(prngSeed)
         val byteArray = data.toBuffer
 
-        for (_ <- 1 to iterations){
-            for (i <- byteArray.indices){
+        for (i <- 1 to iterations){
+            for (j <- byteArray.indices){
                 if (random.nextDouble() < 0.13) { // 13% chance to mutate
-                     byteArray(i) = random.nextInt(256).toByte
+                     byteArray(j) = random.nextInt(256).toByte
                 }
             }
-            if ((iterations + 1) % 500 == 0) { // Extend the buffer every 500 iterations
+            if ((i + 1) % 500 == 0) { // Extend the buffer every 500 iterations
                 byteArray ++= Array.fill(10)(random.nextInt(256).toByte)
             }
         }
         // Write the fuzzed data to standard output
+        println(byteArray.length)
         System.out.write(byteArray.toArray)
 
 
