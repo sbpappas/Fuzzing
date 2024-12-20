@@ -4,6 +4,9 @@ import os
 
 # throughout this file, I am writing function that run the fuzzer in each language
 # then in the main function, call each function
+
+#the times and specifications of each "fuzz" will be placed into this dict:
+
 def run_python_fuzzer(script, args):
     """
     Run a Python script with arguments and time its execution.
@@ -220,6 +223,7 @@ def compile_and_run_rust(args):
     original_dir = os.getcwd()
     try:
         os.chdir("./rust_fuzzer")
+        print("running rust project...")
         subprocess.run(
             ["cargo", "run", "--"] + args,  #had issues here, no need to include spaces 
             stdout=subprocess.PIPE,         # get standard output
@@ -261,20 +265,14 @@ if __name__ == "__main__":
         #print(f"\nReturn Code: {return_code}") 
 
     c_fuzzer_file = "fuzzer.c"
-    output_binary = "fuzzer"
+    c_output_binary = "fuzzer"
     c_iterations = int(iterations)
     #prng_seed = int(prng_seed)
-    #iterations = iterations
 
-    run_c_fuzzer(c_fuzzer_file, output_binary, prng_seed, c_iterations)
-
-    scala_fuzzer_file = "fuzzer.scala"
-    run_scala_script(scala_fuzzer_file, prng_seed, iterations)
-
+    run_c_fuzzer(c_fuzzer_file, c_output_binary, prng_seed, c_iterations)
+    run_scala_script("fuzzer.scala", prng_seed, iterations)
     run_script("fuzzer.jl", [prng_seed, iterations], "julia") #julia script
-
     compile_run_java_file("Fuzzer.java", "Fuzzer", [prng_seed, iterations])
-
     run_script("fuzzer.js", [prng_seed, iterations], "node")
     compile_and_run_typescript("fuzzer.ts", prng_seed, iterations)
     compile_and_run_rust([prng_seed, iterations])
