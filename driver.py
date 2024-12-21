@@ -8,16 +8,6 @@ import os
 #the times and specifications of each "fuzz" will be placed into this dict:
 
 def run_python_fuzzer(script, args):
-    """
-    Run a Python script with arguments and time its execution.
-
-    Parameters:
-        script (str): Path to the Python script to run.
-        args (list): List of arguments to pass to the script.
-
-    Returns:
-        tuple: (execution_time, stdout, stderr, return_code)
-    """
     start_time = time.perf_counter()
     try:
         # Run the script and capture binary output
@@ -33,7 +23,16 @@ def run_python_fuzzer(script, args):
         stdout = result.stdout.decode("utf-8", errors="replace")
         stderr = result.stderr.decode("utf-8", errors="replace")
 
-        return execution_time, stdout, stderr, result.returncode
+        if execution_time is not None:
+            print(f"\n Python Execution Time: {execution_time:.6f} seconds")
+        #print("\nScript Output (decoded):")
+        #print(stdout)  # Decoded output from the script
+        #print("\nScript Errors (if any):")
+        print(stderr)  # Decoded errors from the script
+        #print(f"\nReturn Code: {return_code}") 
+
+
+        #return execution_time, stdout, stderr, result.returncode
 
     except Exception as e:
         print(f"Error while running python script {script}: {e}")
@@ -244,36 +243,22 @@ def compile_and_run_rust(args):
 
 
 if __name__ == "__main__":
-    # define the script to run and its arguments
-    python_script = "fuzzer.py"
+    
     prng_seed = "12345"
     iterations = input("enter the amount of iterations: ")
-    #iterations = "300005"
-    args = [prng_seed, iterations]
+    
+    args = [prng_seed, iterations] #this will set up all of the rest of the program
 
+    python_script = "fuzzer.py"
     print(f"Running script: {python_script} with arguments: {args}")
+    run_python_fuzzer(python_script, args)
 
-    # run the script and time it
-    execution_time, stdout, stderr, return_code = run_python_fuzzer(python_script, args)
-
-    if execution_time is not None:
-        print(f"\n Python Execution Time: {execution_time:.6f} seconds")
-        #print("\nScript Output (decoded):")
-        #print(stdout)  # Decoded output from the script
-        #print("\nScript Errors (if any):")
-        print(stderr)  # Decoded errors from the script
-        #print(f"\nReturn Code: {return_code}") 
-
-    c_fuzzer_file = "fuzzer.c"
-    c_output_binary = "fuzzer"
     c_iterations = int(iterations)
-    #prng_seed = int(prng_seed)
 
-    run_c_fuzzer(c_fuzzer_file, c_output_binary, prng_seed, c_iterations)
+    run_c_fuzzer("fuzzer.c", "fuzzer", prng_seed, c_iterations)
     run_scala_script("fuzzer.scala", prng_seed, iterations)
     run_script("fuzzer.jl", [prng_seed, iterations], "julia") #julia script
     compile_run_java_file("Fuzzer.java", "Fuzzer", [prng_seed, iterations])
     run_script("fuzzer.js", [prng_seed, iterations], "node")
     compile_and_run_typescript("fuzzer.ts", prng_seed, iterations)
-    
     compile_and_run_rust([prng_seed, iterations])
