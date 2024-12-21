@@ -1,6 +1,8 @@
 import time
 import subprocess
 import os  
+import matplotlib.pyplot as plt
+
 
 # throughout this file, I am writing function that run the fuzzer in each language
 # then in the main function, call each function
@@ -255,7 +257,7 @@ if __name__ == "__main__":
 
     c_iterations = int(iterations)
 
-    run_c_fuzzer("fuzzer.c", "fuzzer", prng_seed, c_iterations)
+    run_c_fuzzer("fuzzer.c", "fuzzer", prng_seed, int(iterations)) # the c call needs an int
     run_scala_script("fuzzer.scala", prng_seed, iterations)
     run_script("fuzzer.jl", [prng_seed, iterations], "julia") #julia script
     compile_run_java_file("Fuzzer.java", "Fuzzer", [prng_seed, iterations])
