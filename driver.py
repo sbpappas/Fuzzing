@@ -275,4 +275,5 @@ if __name__ == "__main__":
     compile_run_java_file("Fuzzer.java", "Fuzzer", [prng_seed, iterations])
     run_script("fuzzer.js", [prng_seed, iterations], "node")
     compile_and_run_typescript("fuzzer.ts", prng_seed, iterations)
+    
     compile_and_run_rust([prng_seed, iterations])
