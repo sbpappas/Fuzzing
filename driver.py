@@ -10,6 +10,8 @@ import matplotlib.pyplot as plt
 #the times and specifications of each "fuzz" will be placed into this dict:
 
 def run_python_fuzzer(script, args):
+    print(f"Running script: fuzzer.py with arguments: {args}")
+
     start_time = time.perf_counter()
     try:
         # Run the script and capture binary output
@@ -33,7 +35,7 @@ def run_python_fuzzer(script, args):
         print(stderr)  # Decoded errors from the script
         #print(f"\nReturn Code: {return_code}") 
 
-
+        return execution_time
         #return execution_time, stdout, stderr, result.returncode
 
     except Exception as e:
@@ -81,6 +83,9 @@ def run_c_fuzzer(c_file, output_binary, prng_seed, iterations):
 
         print(f"C Run time: {end_time - start_time:.6f} seconds")
         print(f"\nC Compile + run time: {all_end_time - all_start_time:.6f} seconds\n")
+        execution_time = all_end_time - all_start_time
+        return execution_time
+
     except Exception as e:
         print(f"Error during execution: {e}")
 
@@ -111,6 +116,7 @@ def run_scala_script(scala_file, *args):
             print(f"Scala script failed with exit code {result.returncode}")
         else:
             print(f"\nScala execution time: {end_time - start_time:.6f} seconds\n")
+            return end_time - start_time
     except Exception as e:
         print(f"An error occurred while running the Scala script: {e}")
 
@@ -142,11 +148,13 @@ def run_script(script_name, args, interpreter):
         print(f"\n {interpreter} Execution Time: {end_time - start_time:.6f} seconds\n")
         #print(f"Script Output:\n{result.stdout}")
         #print(f"Script Errors (if any):\n{result.stderr}")
+        return end_time - start_time
     except subprocess.CalledProcessError as e:
         end_time = time.time()  # End timing in case of errors
         print(f"\nAn error occurred while running the script: {e}\n")
         print(f"Execution Time: {end_time - start_time:.6f} seconds")
         print(f"Script Errors:\n{e.stderr}")
+        
 
 def compile_run_java_file(java_file, class_name, args):
     start_time = time.time()
@@ -167,6 +175,7 @@ def compile_run_java_file(java_file, class_name, args):
         end_time = time.time()
         print(f"Successfully executed {class_name}")
         print(f"\n Java Compile and Execution Time: {end_time - start_time:.6f} seconds\n")
+        return end_time - start_time
         #print(f"Program Output:\n{result.stdout}")
         #print(f"Program Errors (if any):\n{result.stderr}")
     except subprocess.CalledProcessError as e:
@@ -208,6 +217,7 @@ def compile_and_run_typescript(ts_file: str, prng_seed: int, iterations: int):
         #print("Fuzzer Output:")
         #print(run_result.stdout)
         print(f"Typescript Compile Plus Execution Time: {end_ts_time - start_ts_time:.6f} seconds")
+        return end_ts_time - start_ts_time
 
         if run_result.stderr:
             print("Fuzzer Errors:")
@@ -240,27 +250,77 @@ def compile_and_run_rust(args):
     end_time = time.time()
     print(f"Successfully executed Rust project")
     print(f"\nRust Compile and Execution Time: {end_time - start_time:.6f} seconds\n")
+    return end_time - start_time
         #print(f"Program Output:\n{result.stdout}")
         #print(f"Program Errors (if any):\n{result.stderr}")
+
+def run_all_fuzzers(prng_seed, iteration_counts):
+    results = {}
+
+    # Define the fuzzers as a mapping of language name to their runner functions
+    fuzzers = {
+        "Python": lambda iters: run_python_fuzzer("fuzzer.py", [prng_seed, str(iters)]),
+        "C": lambda iters: run_c_fuzzer("fuzzer.c", "fuzzer", prng_seed, iters),
+        "Scala": lambda iters: run_scala_script("fuzzer.scala", prng_seed, str(iters)),
+        "Julia": lambda iters: run_script("fuzzer.jl", [prng_seed, str(iters)], "julia"),
+        "Java": lambda iters: compile_run_java_file("Fuzzer.java", "Fuzzer", [prng_seed, str(iters)]),
+        "JavaScript": lambda iters: run_script("fuzzer.js", [prng_seed, str(iters)], "node"),
+        "TypeScript": lambda iters: compile_and_run_typescript("fuzzer.ts", prng_seed, iters),
+        "Rust": lambda iters: compile_and_run_rust([prng_seed, str(iters)])
+    }
+
+    for lang, fuzzer_func in fuzzers.items():
+        results[lang] = []
+        for iters in iteration_counts:
+            print(f"\nRunning {lang} fuzzer with {iters} iterations...")
+            execution_time = fuzzer_func(iters)
+            if execution_time:
+                results[lang].append(execution_time)
+            else:
+                results[lang].append(None)  # Handle errors gracefully
+
+    return results
+
+def plot_results(results, iteration_counts):
+    plt.figure(figsize=(10, 6))
+
+    for lang, times in results.items():
+        plt.plot(iteration_counts, times, label=lang, marker='o')
+
+    plt.xlabel("Number of Iterations")
+    plt.ylabel("Execution Time (seconds)")
+    plt.title("Fuzzer Execution Times by Language")
+    plt.xscale("log")  # Use a logarithmic scale for iterations
+    plt.yscale("log")  # Optional: Log scale for execution times
+    plt.legend()
+    plt.grid(True, which="both", linestyle="--", linewidth=0.5)
+    plt.tight_layout()
+
+    plt.savefig("fuzzer_execution_times.png")  # Save the plot
+    plt.show()
 
 
 if __name__ == "__main__":
     
     prng_seed = "12345"
-    iterations = input("enter the amount of iterations: ")
+    #iterations = input("enter the amount of iterations: ")
     
-    args = [prng_seed, iterations] #this will set up all of the rest of the program
+    #args = [prng_seed, iterations] #this will set up only the python fuzzers
+    #run_python_fuzzer("fuzzer.py", args)
+    #run_c_fuzzer("fuzzer.c", "fuzzer", prng_seed, int(iterations)) # the c call needs an int
+    #run_scala_script("fuzzer.scala", prng_seed, iterations)
+    #run_script("fuzzer.jl", [prng_seed, iterations], "julia") #julia script
+    #compile_run_java_file("Fuzzer.java", "Fuzzer", [prng_seed, iterations])
+    #run_script("fuzzer.js", [prng_seed, iterations], "node")
+    #compile_and_run_typescript("fuzzer.ts", prng_seed, iterations)
+    #compile_and_run_rust([prng_seed, iterations])
 
-    python_script = "fuzzer.py"
-    print(f"Running script: {python_script} with arguments: {args}")
-    run_python_fuzzer(python_script, args)
+    iteration_counts = [100, 1000]
+    #iteration_counts = [1000, 10000, 100000, 500000, 1000000]
 
-    c_iterations = int(iterations)
+    results = run_all_fuzzers(prng_seed, iteration_counts)
+    print(results)
+    plot_results(results, iteration_counts)
 
-    run_c_fuzzer("fuzzer.c", "fuzzer", prng_seed, int(iterations)) # the c call needs an int
-    run_scala_script("fuzzer.scala", prng_seed, iterations)
-    run_script("fuzzer.jl", [prng_seed, iterations], "julia") #julia script
-    compile_run_java_file("Fuzzer.java", "Fuzzer", [prng_seed, iterations])
-    run_script("fuzzer.js", [prng_seed, iterations], "node")
-    compile_and_run_typescript("fuzzer.ts", prng_seed, iterations)
-    compile_and_run_rust([prng_seed, iterations])
+
+    
