@@ -36,7 +36,7 @@ public class Fuzzer {
         }
 
         // Print the fuzzed data as raw bytes
-        System.out.write(data);
+        System.out.write(data.length);
     }
 
     public static void main(String[] args) {

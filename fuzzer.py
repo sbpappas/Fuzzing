@@ -25,6 +25,8 @@ def fuzz_this_thing(prng_seed: int, iterations: int): # makes seed file if it is
         if (i + 1) % 500 == 0:         # every 500 passes extend by 10 
             data.extend(random.randint(0, 255) for _ in range(10))
     sys.stdout.buffer.write(data)
+    print("\n")
+    print(len(data))
 
 if __name__ == "__main__": # make sure we got the args
     if len(sys.argv) != 3:

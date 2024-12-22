@@ -184,49 +184,30 @@ def compile_run_java_file(java_file, class_name, args):
 
 def compile_and_run_typescript(ts_file: str, prng_seed: int, iterations: int):
     try:
-        # Compile the TypeScript file
+        # Measure time for execution using ts-node
         start_ts_time = time.time()
-        compile_result = subprocess.run(
-            ["npx", "tsc", ts_file],
-            capture_output=True,
-            text=True
-        )
-
-        # Check for compilation errors
-        if compile_result.returncode != 0:
-            print("TypeScript Compilation Errors:")
-            print(compile_result.stderr)
-            return
-
-        # Get the output JavaScript file name
-        compiled_ts_file = ts_file.replace(".ts", ".js")
-        
-        if not os.path.exists(compiled_ts_file):
-            print(f"Error: Compiled JavaScript file '{compiled_ts_file}' not found.")
-            return
-
-        # Run the compiled JavaScript file
         run_result = subprocess.run(
-            ["node", compiled_ts_file, str(prng_seed), str(iterations)],
+            ["npx", "ts-node", ts_file, str(prng_seed), str(iterations)],
             capture_output=True,
-            #text=True
+            #text=True # must be commented because text is not returned, weird bin chars are returned 
         )
         end_ts_time = time.time()
 
-        # Print output from the JavaScript execution
-        #print("Fuzzer Output:")
-        #print(run_result.stdout)
-        print(f"Typescript Compile Plus Execution Time: {end_ts_time - start_ts_time:.6f} seconds")
-        
-
-        if run_result.stderr:
-            print("Fuzzer Errors:")
+        # error checking
+        if run_result.returncode != 0:
+            print("TypeScript Execution Errors:")
             print(run_result.stderr)
+            return
+
+        print(f"TypeScript Compile Plus Execution Time: {end_ts_time - start_ts_time:.6f} seconds")
+        # Uncomment below to see fuzzer output
+        # print("Fuzzer Output:")
+        # print(run_result.stdout)
 
         return end_ts_time - start_ts_time
 
     except FileNotFoundError as e:
-        print("Error: Required command or file not found. Make sure Node.js and TypeScript are installed.")
+        print("Error: Required command or file not found. Make sure Node.js, TypeScript, and ts-node are installed.")
         print(e)
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
@@ -317,8 +298,8 @@ if __name__ == "__main__":
     #compile_and_run_typescript("fuzzer.ts", prng_seed, iterations)
     #compile_and_run_rust([prng_seed, iterations])
 
-    iteration_counts = [100, 1000]
-    #iteration_counts = [1000, 10000, 100000, 500000, 1000000]
+    #iteration_counts = [100, 1000]
+    iteration_counts = [10000, 50000, 100000, 500000, 750000, 1000000, 1500000]
 
     results = run_all_fuzzers(prng_seed, iteration_counts)
     print(results)
