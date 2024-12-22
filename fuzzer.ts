@@ -12,8 +12,8 @@ function fuzzThisThing(prngSeed: number, iterations: number): void {
         createSeedFile();
     }
 
-    // Read the seed file into a buffer
-    const data = Buffer.from(fs.readFileSync("_seed_"));
+    let data: Buffer = Buffer.from(fs.readFileSync("_seed_")); // expliciting typing this is necessary for concat later
+    //needs to be let, not const bc it will update
 
     // Set up PRNG
     const random = seededRandom(prngSeed);
@@ -26,14 +26,19 @@ function fuzzThisThing(prngSeed: number, iterations: number): void {
             }
         }
         if ((i + 1) % 500 === 0) { // Every 500 iterations, extend the data
+            const additionalData = Buffer.alloc(10); // Create a buffer of size 10
             for (let k = 0; k < 10; k++) {
-                data[data.length] = Math.floor(random() * 256);
+                additionalData[k] = Math.floor(random() * 256);
             }
+            // concat original data with new data. TS has no dynamic resizing, need to create new arrays
+            data = Buffer.concat([data as Buffer, additionalData as Buffer]);
         }
+        
     }
 
     // Output the fuzzed data
     process.stdout.write(data);
+    console.log(data.length)
 }
 
 function seededRandom(seed: number): () => number {
@@ -59,7 +64,7 @@ function main(): void {
         console.error("Both <prng_seed> and <iterations> must be valid integers.");
         process.exit(1);
     }
-
+    console.log(iterations)
     fuzzThisThing(prngSeed, iterations);
 }
 

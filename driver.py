@@ -217,11 +217,13 @@ def compile_and_run_typescript(ts_file: str, prng_seed: int, iterations: int):
         #print("Fuzzer Output:")
         #print(run_result.stdout)
         print(f"Typescript Compile Plus Execution Time: {end_ts_time - start_ts_time:.6f} seconds")
-        return end_ts_time - start_ts_time
+        
 
         if run_result.stderr:
             print("Fuzzer Errors:")
             print(run_result.stderr)
+
+        return end_ts_time - start_ts_time
 
     except FileNotFoundError as e:
         print("Error: Required command or file not found. Make sure Node.js and TypeScript are installed.")
