@@ -298,8 +298,7 @@ if __name__ == "__main__":
     #compile_and_run_typescript("fuzzer.ts", prng_seed, iterations)
     #compile_and_run_rust([prng_seed, iterations])
 
-    #iteration_counts = [100, 1000]
-    iteration_counts = [10000, 50000, 100000, 500000, 750000, 1000000, 1500000]
+    iteration_counts = [10000, 50000, 100000, 500000, 750000, 1000000, 1500000] # can modify this to shorten or get more data points
 
     results = run_all_fuzzers(prng_seed, iteration_counts)
     print(results)
