@@ -4,10 +4,9 @@ import os
 import matplotlib.pyplot as plt
 
 
-# throughout this file, I am writing function that run the fuzzer in each language
-# then in the main function, call each function
+# throughout this file, I am writing functions that run the fuzzer in each language
+# then in the main function, call each a function that calls each function
 
-#the times and specifications of each "fuzz" will be placed into this dict:
 
 def run_python_fuzzer(script, args):
     print(f"Running script: fuzzer.py with arguments: {args}")
@@ -23,7 +22,6 @@ def run_python_fuzzer(script, args):
         end_time = time.perf_counter()
         execution_time = end_time - start_time
 
-        # Decode stdout and stderr, handle decoding errors gracefully
         stdout = result.stdout.decode("utf-8", errors="replace")
         stderr = result.stderr.decode("utf-8", errors="replace")
 
@@ -61,14 +59,13 @@ def run_c_fuzzer(c_file, output_binary, prng_seed, iterations):
         print(f"Error during compilation: {e}")
         return
 
-    # run the compiled binary
     try:
         print(f"Running C {output_binary} with arguments: {prng_seed} {iterations}...")
         start_time = time.perf_counter()
         run_process = subprocess.run(
             [f"./{output_binary}", str(prng_seed), str(iterations)],
             capture_output=True,
-            text=False  # Output might kinda crazy
+            text=False  # Output might be kinda crazy
         )
         all_end_time = time.perf_counter()
         end_time = time.perf_counter()
@@ -91,18 +88,16 @@ def run_c_fuzzer(c_file, output_binary, prng_seed, iterations):
 
 def run_scala_script(scala_file, *args):
     try:
-        # Construct the command to run scala-cli with arguments
+        # make the command to run scala-cli with arguments
         command = ["scala-cli", "run", scala_file, "--"] + list(args)
         print(f"Running command: {' '.join(command)}")
         
-        # Measure execution time
         start_time = time.time()
         
-        # Execute the command
         result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         end_time = time.time()
         
-        # Decode output using 'replace' to handle encoding errors gracefully
+        # using 'replace' to handle encoding errors gracefully
         stdout = result.stdout.decode(errors="replace")
         stderr = result.stderr.decode(errors="replace")
         
@@ -121,14 +116,7 @@ def run_scala_script(scala_file, *args):
         print(f"An error occurred while running the Scala script: {e}")
 
 def run_script(script_name, args, interpreter):
-    """
-    Abstract unction to run a script from any language with a specified interpreter
     
-    :param script_name: Name of the script to run.
-    :param args: List of arguments to pass to the script.
-    :param interpreter: Interpreter to use for running the script (e.g., "python3", "julia").
-    :return: None
-    """
     print(f"Running script: {script_name} with arguments: {args}")
     
     command = [interpreter, script_name] + args  # Construct the command
@@ -137,10 +125,10 @@ def run_script(script_name, args, interpreter):
     try:
         result = subprocess.run(
             command, 
-            stdout=subprocess.PIPE,  # Capture standard output
-            stderr=subprocess.PIPE,  # Capture errors
+            stdout=subprocess.PIPE,  #  standard output
+            stderr=subprocess.PIPE,  #  errors
             #text=True,  # including this line makes an error
-            check=True  # Raise exception if the command fails
+            check=True  # throw exception if the command fails
         )
         end_time = time.time()  # End timing
         
@@ -184,7 +172,6 @@ def compile_run_java_file(java_file, class_name, args):
 
 def compile_and_run_typescript(ts_file: str, prng_seed: int, iterations: int):
     try:
-        # Measure time for execution using ts-node
         start_ts_time = time.time()
         run_result = subprocess.run(
             ["npx", "ts-node", ts_file, str(prng_seed), str(iterations)],
@@ -240,7 +227,7 @@ def compile_and_run_rust(args):
 def run_all_fuzzers(prng_seed, iteration_counts):
     results = {}
 
-    # Define the fuzzers as a mapping of language name to their runner functions
+    # mapping of language name to their runner functions
     fuzzers = {
         "Python": lambda iters: run_python_fuzzer("fuzzer.py", [prng_seed, str(iters)]),
         "C": lambda iters: run_c_fuzzer("fuzzer.c", "fuzzer", prng_seed, iters),
@@ -260,7 +247,7 @@ def run_all_fuzzers(prng_seed, iteration_counts):
             if execution_time:
                 results[lang].append(execution_time)
             else:
-                results[lang].append(None)  # Handle errors gracefully
+                results[lang].append(None)  # handle errors gracefully
 
     return results
 
@@ -273,13 +260,13 @@ def plot_results(results, iteration_counts):
     plt.xlabel("Number of Iterations")
     plt.ylabel("Execution Time (seconds)")
     plt.title("Fuzzer Execution Times by Language")
-    plt.xscale("log")  # Use a logarithmic scale for iterations
-    plt.yscale("log")  # Optional: Log scale for execution times
+    plt.xscale("log")  # using a log scale for iterations
+    #plt.yscale("log")  # log scale for execution times
     plt.legend()
     plt.grid(True, which="both", linestyle="--", linewidth=0.5)
     plt.tight_layout()
 
-    plt.savefig("fuzzer_execution_times.png")  # Save the plot
+    plt.savefig("fuzzer_execution_times.png")
     plt.show()
 
 
@@ -288,16 +275,7 @@ if __name__ == "__main__":
     prng_seed = "12345"
     #iterations = input("enter the amount of iterations: ")
     
-    #args = [prng_seed, iterations] #this will set up only the python fuzzers
-    #run_python_fuzzer("fuzzer.py", args)
-    #run_c_fuzzer("fuzzer.c", "fuzzer", prng_seed, int(iterations)) # the c call needs an int
-    #run_scala_script("fuzzer.scala", prng_seed, iterations)
-    #run_script("fuzzer.jl", [prng_seed, iterations], "julia") #julia script
-    #compile_run_java_file("Fuzzer.java", "Fuzzer", [prng_seed, iterations])
-    #run_script("fuzzer.js", [prng_seed, iterations], "node")
-    #compile_and_run_typescript("fuzzer.ts", prng_seed, iterations)
-    #compile_and_run_rust([prng_seed, iterations])
-
+    #iteration_counts = [100, 1000]
     iteration_counts = [10000, 50000, 100000, 500000, 750000, 1000000, 1500000] # can modify this to shorten or get more data points
 
     results = run_all_fuzzers(prng_seed, iteration_counts)
